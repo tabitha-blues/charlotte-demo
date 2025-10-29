@@ -1,9 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const http = require('http');
-const https = require('https');
-const WebSocket = require('ws');
-const path = require('path');
+require("dotenv").config();
+const express = require("express");
+const http = require("http");
+const https = require("https");
+const WebSocket = require("ws");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -29,110 +29,117 @@ function broadcast(data) {
 }
 
 // Webhook endpoint for normal dataset
-app.post('/webhook/normal', (req, res) => {
+app.post("/webhook/normal", (req, res) => {
   const message = {
-    type: 'normal',
+    type: "normal",
     data: req.body,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  console.log('Normal webhook received:', message);
+  console.log("Normal webhook received:", message);
   broadcast(message);
-  res.status(200).json({ status: 'received' });
+  res.status(200).json({ status: "received" });
 });
 
 // Webhook endpoint for anomalous dataset
-app.post('/webhook/anomalous', (req, res) => {
+app.post("/webhook/anomalous", (req, res) => {
   const message = {
-    type: 'anomalous',
+    type: "anomalous",
     data: req.body,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  console.log('Anomalous webhook received:', message);
+  console.log("Anomalous webhook received:", message);
   broadcast(message);
-  res.status(200).json({ status: 'received' });
+  res.status(200).json({ status: "received" });
 });
 
 // Device-specific view
-app.get('/claim/:devID', (req, res) => {
+app.get("/claim/:devID", (req, res) => {
   const devID = req.params.devID;
 
   // Avoid serving this route for static files
-  if (devID.includes('.')) {
-    return res.status(404).send('Not found');
+  if (devID.includes(".")) {
+    return res.status(404).send("Not found");
   }
 
-  res.sendFile(path.join(__dirname, 'device.html'));
+  res.sendFile(path.join(__dirname, "device.html"));
 });
 
 // API endpoint to fetch device data
-app.get('/api/device/:devID', (req, res) => {
+app.get("/api/device/:devID", (req, res) => {
   const devID = req.params.devID;
-  const apiUrl = `https://api.preprod.blues.tools/v1/projects/${projectUid}/devices/${devID}`
+  const apiUrl = `${window.protocol}//api.${window.host}/v1/projects/${projectUid}/devices/${devID}`;
+  // const apiUrl = `https://api.preprod.blues.tools/v1/projects/${projectUid}/devices/${devID}`;
   //const apiUrl = `https://api.notefile.net/v1/projects/${devID}/devices`;
 
   const options = {
     headers: {
-      'Authorization': `Bearer ${apiToken}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
   };
 
-  https.get(apiUrl, options, (apiRes) => {
-    let data = '';
+  https
+    .get(apiUrl, options, (apiRes) => {
+      let data = "";
 
-    apiRes.on('data', (chunk) => {
-      data += chunk;
-    });
+      apiRes.on("data", (chunk) => {
+        data += chunk;
+      });
 
-    apiRes.on('end', () => {
-      console.log("Received: ", data);
-      res.status(apiRes.statusCode).send(data);
+      apiRes.on("end", () => {
+        console.log("Received: ", data);
+        res.status(apiRes.statusCode).send(data);
+      });
+    })
+    .on("error", (error) => {
+      console.error("Error fetching device data:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to fetch device data", message: error.message });
     });
-  }).on('error', (error) => {
-    console.error('Error fetching device data:', error);
-    res.status(500).json({ error: 'Failed to fetch device data', message: error.message });
-  });
 });
 
 // API endpoint to claim device (update fleet)
-app.post('/api/device/:devID/claim', (req, res) => {
+app.post("/api/device/:devID/claim", (req, res) => {
   const devID = req.params.devID;
   const { fleetUID } = req.body;
 
   if (!fleetUID) {
-    return res.status(400).json({ error: 'fleetUID is required' });
+    return res.status(400).json({ error: "fleetUID is required" });
   }
 
-  const apiUrl = `https://api.preprod.blues.tools/v1/projects/${projectUid}/fleets/${fleetUID}`;
+  const apiUrl = `${window.protocol}//api.${window.host}/v1/projects/${projectUid}/fleets/${fleetUID}`;
   const requestBody = JSON.stringify({
-    addDevices: [devID]
+    addDevices: [devID],
   });
 
   const options = {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Authorization': `Bearer ${apiToken}`,
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(requestBody)
-    }
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(requestBody),
+    },
   };
 
   const apiReq = https.request(apiUrl, options, (apiRes) => {
-    let data = '';
+    let data = "";
 
-    apiRes.on('data', (chunk) => {
+    apiRes.on("data", (chunk) => {
       data += chunk;
     });
 
-    apiRes.on('end', () => {
+    apiRes.on("end", () => {
       console.log("Claim device response: ", data);
       res.status(apiRes.statusCode).send(data);
     });
   });
 
-  apiReq.on('error', (error) => {
-    console.error('Error claiming device:', error);
-    res.status(500).json({ error: 'Failed to claim device', message: error.message });
+  apiReq.on("error", (error) => {
+    console.error("Error claiming device:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to claim device", message: error.message });
   });
 
   apiReq.write(requestBody);
@@ -140,10 +147,10 @@ app.post('/api/device/:devID/claim', (req, res) => {
 });
 
 // WebSocket connection handler
-wss.on('connection', (ws) => {
-  console.log('New WebSocket client connected');
-  ws.on('close', () => {
-    console.log('WebSocket client disconnected');
+wss.on("connection", (ws) => {
+  console.log("New WebSocket client connected");
+  ws.on("close", () => {
+    console.log("WebSocket client disconnected");
   });
 });
 
