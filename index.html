@@ -120,8 +120,9 @@
         const anomalousMessages = document.getElementById('anomalous-messages');
         const statusDiv = document.getElementById('status');
 
-        // Connect to WebSocket
-        const ws = new WebSocket(`ws://${window.location.host}`);
+        // Connect to WebSocket (use wss:// for HTTPS, ws:// for HTTP)
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}`);
 
         ws.onopen = () => {
             console.log('Connected to WebSocket');
