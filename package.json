@@ -1,0 +1,15 @@
+{
+  "name": "charlotte-demo",
+  "version": "1.0.0",
+  "description": "Webhook message display website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "generate-certs": "node generate-certs.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}

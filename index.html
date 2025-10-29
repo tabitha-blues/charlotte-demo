@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Message Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 2px solid #333;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ecf0f1;
+        }
+
+        .message {
+            background-color: white;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .anomalous .message {
+            border-left-color: #e74c3c;
+        }
+
+        .message-timestamp {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .message-content {
+            color: #2c3e50;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .disconnected {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status disconnected" id="status">Connecting...</div>
+
+    <div class="section normal">
+        <div class="header">Normal dataset</div>
+        <div class="messages" id="normal-messages"></div>
+    </div>
+
+    <div class="section anomalous">
+        <div class="header">Anomalous dataset</div>
+        <div class="messages" id="anomalous-messages"></div>
+    </div>
+
+    <script>
+        const normalMessages = document.getElementById('normal-messages');
+        const anomalousMessages = document.getElementById('anomalous-messages');
+        const statusDiv = document.getElementById('status');
+
+        // Connect to WebSocket
+        const ws = new WebSocket(`ws://${window.location.host}`);
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket');
+            statusDiv.textContent = 'Connected';
+            statusDiv.className = 'connection-status connected';
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from WebSocket');
+            statusDiv.textContent = 'Disconnected';
+            statusDiv.className = 'connection-status disconnected';
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            statusDiv.textContent = 'Error';
+            statusDiv.className = 'connection-status disconnected';
+        };
+
+        ws.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            addMessage(message);
+        };
+
+        function addMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const timestamp = new Date(message.timestamp).toLocaleString();
+            const content = typeof message.data === 'object'
+                ? JSON.stringify(message.data.body, null, 2)
+                : message.data;
+
+            messageDiv.innerHTML = `
+                <div class="message-timestamp">${timestamp}</div>
+                <div class="message-content">${content}</div>
+            `;
+
+            const container = message.type === 'normal' ? normalMessages : anomalousMessages;
+            container.insertBefore(messageDiv, container.firstChild);
+        }
+    </script>
+</body>
+</html>
