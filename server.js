@@ -67,8 +67,7 @@ app.get("/claim/:devID", (req, res) => {
 // API endpoint to fetch device data
 app.get("/api/device/:devID", (req, res) => {
   const devID = req.params.devID;
-  const apiUrl = `${window.protocol}//api.${window.host}/v1/projects/${projectUid}/devices/${devID}`;
-  // const apiUrl = `https://api.preprod.blues.tools/v1/projects/${projectUid}/devices/${devID}`;
+  const apiUrl = `https://api.notehub.io/v1/projects/${projectUid}/devices/${devID}`;
   //const apiUrl = `https://api.notefile.net/v1/projects/${devID}/devices`;
 
   const options = {
@@ -108,7 +107,7 @@ app.post("/api/device/:devID/claim", (req, res) => {
     return res.status(400).json({ error: "fleetUID is required" });
   }
 
-  const apiUrl = `${window.protocol}//api.${window.host}/v1/projects/${projectUid}/fleets/${fleetUID}`;
+  const apiUrl = `https://api.notehub.io/v1/projects/${projectUid}/fleets/${fleetUID}`;
   const requestBody = JSON.stringify({
     addDevices: [devID],
   });
