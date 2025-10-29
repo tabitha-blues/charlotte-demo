@@ -17,9 +17,27 @@ A real-time webhook message display website with device-specific views and fleet
 
 ## Installation
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd charlotte-demo
+```
+
+2. Install dependencies:
 ```bash
 npm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+4. Edit `.env` and add your credentials:
+```
+PROJECT_UID=your_project_uid_here
+API_TOKEN=your_api_token_here
+PORT=3000
 ```
 
 ## Running the Application
@@ -84,12 +102,14 @@ On any device view page:
 
 ## Configuration
 
-The application uses hard-coded configuration values in `server.js`:
-- `projectUid`: The Notehub project UID
-- `apiToken`: The Notehub API token
-- Fleet UID in `device.html`: The target fleet for device claiming
+The application uses environment variables for secure configuration:
+- `PROJECT_UID`: The Notehub project UID
+- `API_TOKEN`: The Notehub API token
+- `PORT`: Server port (defaults to 3000)
 
-To modify these values, edit the respective files before starting the server.
+These are stored in a `.env` file (not committed to Git) and loaded using `dotenv`.
+
+**Important**: Never commit your `.env` file to version control. Use `.env.example` as a template.
 
 ## Project Structure
 
@@ -102,11 +122,43 @@ charlotte-demo/
 └── README.md          # This file
 ```
 
+## Deployment
+
+### Deploy to Render (Recommended)
+
+1. Push your code to GitHub
+
+2. Go to [Render](https://render.com) and sign up/login
+
+3. Click "New +" and select "Web Service"
+
+4. Connect your GitHub repository
+
+5. Render will auto-detect the `render.yaml` configuration
+
+6. Set your environment variables in the Render dashboard:
+   - `PROJECT_UID`: Your Notehub project UID
+   - `API_TOKEN`: Your Notehub API token
+
+7. Click "Create Web Service"
+
+Your app will be live at `https://your-app-name.onrender.com`
+
+### Other Platforms
+
+The app can also be deployed to:
+- Railway
+- Fly.io
+- Heroku
+- Any Node.js hosting platform
+
+Just ensure you set the required environment variables on your chosen platform.
+
 ## API Endpoints
 
 - `GET /` - Main webhook dashboard
 - `POST /webhook/normal` - Normal dataset webhook endpoint
 - `POST /webhook/anomalous` - Anomalous dataset webhook endpoint
-- `GET /:devID` - Device-specific view page
+- `GET /claim/:devID` - Device-specific view page
 - `GET /api/device/:devID` - Fetch device data from Notehub
 - `POST /api/device/:devID/claim` - Claim device to fleet

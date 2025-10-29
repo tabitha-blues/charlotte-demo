@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: charlotte-demo
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PROJECT_UID
+        sync: false
+      - key: API_TOKEN
+        sync: false
+      - key: PORT
+        value: 3000
