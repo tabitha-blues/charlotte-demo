@@ -29,6 +29,8 @@
         border-radius: 8px;
         margin-bottom: 20px;
         position: relative;
+        display: grid;
+        gap: 0.25rem;
       }
 
       .header h1 {
@@ -42,10 +44,7 @@
       }
 
       .fedex-logo {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        height: 60px;
+        height: 3rem;
       }
 
       .content {
@@ -122,9 +121,12 @@
       }
 
       .claim-section {
-        margin-top: 30px;
-        padding-top: 30px;
-        border-top: 2px solid #ecf0f1;
+        display: grid;
+        place-items: center;
+        height: 9rem;
+        margin-bottom: 30px;
+        /* margin: 30px;
+        padding-top: 30px; */
       }
 
       .claim-form {
@@ -159,7 +161,7 @@
         color: white;
         border: none;
         border-radius: 4px;
-        font-size: 16px;
+        font-size: 1.5rem;
         font-weight: bold;
         cursor: pointer;
         transition: background-color 0.3s;
@@ -175,26 +177,39 @@
       }
 
       .success {
-        background-color: #27ae60;
-        color: white;
+        color: #27ae60;
+        background-color: white;
         padding: 20px;
         border-radius: 4px;
         margin: 20px 0;
+        font-size: 1.875rem;
+        font-weight: 600;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <a href="/" class="back-link">← Back to Dashboard</a>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+        "
+      >
+        <a href="/" class="back-link">← Back </a>
 
-      <div class="header">
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/9/9d/FedEx_Express.svg"
           alt="FedEx Logo"
           class="fedex-logo"
         />
-        <h1>Device Data</h1>
-        <div class="device-id">Device ID: <span id="device-id"></span></div>
+      </div>
+      <div class="header">
+        <h1 style="font-weight: 500">Device</h1>
+        <div class="device-id"><span id="device-sku"></span></div>
+        <div class="device-id"><span id="device-id"></span></div>
+        <div class="device-id"><span id="device-location"></span></div>
       </div>
 
       <div class="content">
@@ -203,17 +218,20 @@
           <p>Fetching device data...</p>
         </div>
         <div class="claim-section">
-          <h2>Activate Device</h2>
-          <button
-            class="claim-button"
-            id="claim-button"
-            onclick="claimDevice()"
-          >
-            Activate Device
-          </button>
-          <div id="claim-result"></div>
+          <div>
+            <button
+              class="claim-button"
+              id="claim-button"
+              onclick="claimDevice()"
+            >
+              Activate Device
+            </button>
+            <div id="claim-result"></div>
+          </div>
         </div>
-        <h2>Device information</h2>
+        <h2 style="font-weight: 500; margin-bottom: 0.75rem">
+          Device information
+        </h2>
         <div id="error-container"></div>
         <div id="data-container"></div>
       </div>
@@ -222,7 +240,7 @@
     <script>
       // Extract device ID from URL
       const pathParts = window.location.pathname.split("/");
-      const devID = pathParts[pathParts.length - 1];
+      const devID = decodeURIComponent(pathParts[pathParts.length - 1]);
 
       // Hard-coded Fleet UID constant
       const FLEET_UID = "fleet:04dea614-1326-4ed7-aeb4-e250b4cbab78";
@@ -234,8 +252,17 @@
         try {
           const response = await fetch(`/api/device/${devID}`);
           const data = await response.text();
+          const jsonData = JSON.parse(data);
+          console.log(jsonData);
 
           document.getElementById("loading").style.display = "none";
+
+          document.getElementById("device-location").textContent =
+            jsonData.tower_location.name;
+
+          document.getElementById(
+            "device-sku"
+          ).textContent = `sku: ${jsonData.sku}`;
 
           if (!response.ok) {
             showError(`Error: ${response.status} ${response.statusText}`, data);
@@ -286,7 +313,7 @@
 
         // Disable button during request
         claimButton.disabled = true;
-        claimButton.textContent = "Claiming...";
+        claimButton.textContent = "Activating...";
         resultContainer.innerHTML = "";
 
         try {
@@ -301,7 +328,7 @@
           const data = await response.text();
 
           if (response.ok) {
-            showClaimResult("success", "Device claimed successfully!");
+            showClaimResult("success", "Device Activated!");
             // Refresh device data
             setTimeout(() => {
               fetchDeviceData();
@@ -320,8 +347,13 @@
       function showClaimResult(type, message) {
         const resultContainer = document.getElementById("claim-result");
         const className = type === "success" ? "success" : "error";
+
+        const claimButton = document.getElementById("claim-button");
+        claimButton.style.display = "none";
+
         resultContainer.innerHTML = `
                 <div class="${className}">
+                    <div style="font-size: 3rem; text-align: center; margin-bottom: .5rem; margin-top: -1rem">✓</div>
                     <p>${message}</p>
                 </div>
             `;
